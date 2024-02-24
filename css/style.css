@@ -1,0 +1,57 @@
+:root {
+    --margin: 32px;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+canvas#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+div#ui > * {
+    position: absolute;
+    text-align: center;
+}
+
+div#ui > .hcenter {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+div#ui > .vcenter {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+div#ui > .left {
+    left: var(--margin);
+}
+
+div#ui > .right {
+    right: var(--margin);
+}
+
+div#ui > .top {
+    top: var(--margin);
+}
+
+div#ui > .bottom {
+    bottom: var(--margin);
+}
+
+*[data-hidden="true"] {
+    display: none;
+}
+
+p#score {
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: xx-large;
+    margin: 0;
+    color: red;
+}
