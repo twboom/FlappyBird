@@ -4,6 +4,7 @@ const CONFIG = {
     PLAYER_DISTANCE_TO_EDGE: 50,
     PLAYER_SPEED: 10,
     BALL_SIZE: 20,
+    AGENT_CLOCK_SPEED: 100,
 }
 
 const SESSION = {
@@ -13,9 +14,8 @@ const SESSION = {
     },
     AGENTS: [],
     BALL: null,
-    KEYBINDS: {},
+    KEY_ACTIVITY: {},
     RUNNING: true,
-    LAST_FRAME: 0,
 }
 
 const CANVAS = document.getElementById('canvas');
@@ -31,8 +31,8 @@ class Player {
 
     step() {
         if (this.controls) {
-            if (SESSION.KEYBINDS[this.controls.up]) { this.move('up'); };
-            if (SESSION.KEYBINDS[this.controls.down]) { this.move('down'); };
+            if (SESSION.KEY_ACTIVITY[this.controls.up]) { this.move('up'); };
+            if (SESSION.KEY_ACTIVITY[this.controls.down]) { this.move('down'); };
         };
     };
 
@@ -104,11 +104,18 @@ class Ball {
 class Agent {
     constructor(player) {
         this.player = player;
+        this.id = SESSION.AGENTS.length;
+        this.keys = {
+            up: 'AGENT-' + this.id + 'up',
+            down: 'AGENT-' + this.id + 'down',
+        }
+        this.player.controls = {up: this.keys.up, down: this.keys.down};
+        SESSION.AGENTS.push(this);
     };
 
     step(ballY) {
-        if (this.player.pos > ballY) { this.player.move('up'); };
-        if (this.player.pos < ballY) { this.player.move('down'); };
+        if (this.player.pos > ballY) { SESSION.KEY_ACTIVITY[this.keys.up] = true; SESSION.KEY_ACTIVITY[this.keys.down] = false; };
+        if (this.player.pos < ballY) { SESSION.KEY_ACTIVITY[this.keys.down] = true; SESSION.KEY_ACTIVITY[this.keys.up] = false; };
     };
 };
 
@@ -119,17 +126,10 @@ function scorePoint(player) {
 }
 
 function frame() {
-    console.log(Date.now() - SESSION.LAST_FRAME)
-    SESSION.LAST_FRAME = Date.now();
-
     CTX.clearRect(0,0,CANVAS.width,CANVAS.height);
 
     SESSION.BALL.step();
     SESSION.BALL.render();
-
-    SESSION.AGENTS.forEach(ag => {
-        ag.step(SESSION.BALL.pos.y);
-    });
 
     Object.values(SESSION.PLAYERS).forEach(pl => {
         pl.step();
@@ -137,6 +137,12 @@ function frame() {
     });
 
     if (SESSION.RUNNING) { requestAnimationFrame(frame); };
+};
+
+function agentFrame() {
+    SESSION.AGENTS.forEach(ag => {
+        ag.step(SESSION.BALL.pos.y);
+    });
 };
 
 function resizeCanvas() {
@@ -147,10 +153,10 @@ function resizeCanvas() {
 function init() {
     // Add listeners
     window.addEventListener('keydown', evt => {
-        SESSION.KEYBINDS[evt.code] = true;
+        SESSION.KEY_ACTIVITY[evt.code] = true;
     });
     window.addEventListener('keyup', evt => {
-        SESSION.KEYBINDS[evt.code] = false;
+        SESSION.KEY_ACTIVITY[evt.code] = false;
     });
     window.addEventListener('resize', resizeCanvas);
 
@@ -162,15 +168,15 @@ function init() {
     SESSION.PLAYERS.RIGHT = new Player('right');
 
     // Add agent for player RIGHT
-    SESSION.AGENTS.push(new Agent(SESSION.PLAYERS.LEFT));
-    SESSION.AGENTS.push(new Agent(SESSION.PLAYERS.RIGHT));
+    // new Agent(SESSION.PLAYERS.LEFT);
+    new Agent(SESSION.PLAYERS.RIGHT);
 
     // Add the ball
     SESSION.BALL = new Ball();
 
     // Start the frames
-    SESSION.LAST_FRAME = Date.now();
     frame();
+    SESSION.AGENT_CLOCK = setInterval(agentFrame, CONFIG.AGENT_CLOCK_SPEED);
 };
 
 init();
